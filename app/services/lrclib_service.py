@@ -3,12 +3,13 @@ from app.models.dto_song_search import SongDetailsDTO
 
 LRCLIB_API = "https://lrclib.net/api/"
 
-async def search_song(q: str = None, track_name: str = None, artist_name: str = None) -> list[SongDetailsDTO]:
+async def search_song(q: str = None, track_name: str = None, artist_name: str = None, album_name: str = None) -> list[SongDetailsDTO]:
 
     params = {
         "q": q,
         "track_name": track_name,
-        "artist_name": artist_name
+        "artist_name": artist_name,
+        "album_name": album_name
     }
 
     async with httpx.AsyncClient(timeout=10) as client:
@@ -24,7 +25,8 @@ async def search_song(q: str = None, track_name: str = None, artist_name: str = 
             SongDetailsDTO(
                 id=item.get("id"),
                 trackName=item.get("trackName"),
-                artistName=item.get("artistName")
+                artistName=item.get("artistName"),
+                albumName=item.get('albumName')
             )
             for item in data
         ]

@@ -4,3 +4,4 @@ class SongDetailsDTO(BaseModel):
     id: int
     trackName: str
     artistName: str
+    albumName: str

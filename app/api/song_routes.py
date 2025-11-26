@@ -9,9 +9,10 @@ router = APIRouter(prefix="/song", tags=["Song"])
 async def get_song_from_lrclib(
     q: str = None,
     track_name: str = None,
-    artist_name: str = None
+    artist_name: str = None,
+    album_name: str = None
 ):
-    if not any([q, track_name, artist_name]):
+    if not any([q, track_name, artist_name, album_name]):
         return []
 
-    return await search_song(q, track_name, artist_name)
+    return await search_song(q, track_name, artist_name, album_name)
