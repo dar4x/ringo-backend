@@ -1,9 +1,12 @@
-import httpx
-from app.models.dto_song_search import SongDetailsDTO
+# Internal packages
+from app.models.dto_song_search import SongSearchDTO
+from app.models.dto_song_details import SongDetailsDTO
+from app.core.config import LRCLIB_API
+from app.core.http_client import async_client
 
-LRCLIB_API = "https://lrclib.net/api/"
 
-async def search_song(q: str = None, track_name: str = None, artist_name: str = None, album_name: str = None) -> list[SongDetailsDTO]:
+
+async def search_song(q: str = None, track_name: str = None, artist_name: str = None, album_name: str = None) -> list[SongSearchDTO]:
 
     params = {
         "q": q,
@@ -12,21 +15,27 @@ async def search_song(q: str = None, track_name: str = None, artist_name: str = 
         "album_name": album_name
     }
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(LRCLIB_API + "search", params=params)
-        resp.raise_for_status()
+    resp = await async_client.get(LRCLIB_API + "search", params=params)
+    resp.raise_for_status()
 
-        data = resp.json()
+    data = resp.json()
 
-        if not isinstance(data, list):
-            return []
+    if not isinstance(data, list):
+        return []
 
-        return [
-            SongDetailsDTO(
-                id=item.get("id"),
-                trackName=item.get("trackName"),
-                artistName=item.get("artistName"),
-                albumName=item.get('albumName')
-            )
-            for item in data
-        ]
+    return [SongSearchDTO(**item) for item in data]
+
+async def song_id(id: int = None) -> SongDetailsDTO | None:
+
+    response = await async_client.get(f"{LRCLIB_API}get/{id}")
+    response.raise_for_status()
+
+    data = response.json()
+
+    if not isinstance(data, dict):
+        return None
+        
+    return [
+        SongDetailsDTO(**data)
+    ]
+        

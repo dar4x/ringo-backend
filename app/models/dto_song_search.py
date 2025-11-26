@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-class SongDetailsDTO(BaseModel):
+class SongSearchDTO(BaseModel):
     id: int
     trackName: str
     artistName: str
