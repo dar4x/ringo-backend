@@ -1,9 +1,13 @@
 # External packages
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 # Internal packages
 from app.api.song_routes import router as song_router
+from app.core.database.database import DATABASE_URL, engine, SessionLocal, get_db, Base
+from app.core.models.songs import Song, SongTranslation
 
 
 app = FastAPI()
@@ -16,12 +20,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+Base.metadata.create_all(bind=engine)
+
 app.include_router(song_router)
 
 
 @app.get("/")
 def read_root():
     return {"message": "hello world!"}
-
-
-
+@app.get("/test-db")
+def test_db(db: Session = Depends(get_db)):
+    try:
+        result = db.execute(text("SELECT name FROM sqlite_master WHERE type='table';")).fetchall()
+        return {
+            "status": "DB connected!", 
+            "engine": "sqlite:///./song_learner.db",  # ← Жёстко прописали
+            "tables": [row[0] for row in result]
+        }
+    except Exception as e:
+        return {"status": "DB error", "error": str(e)}
