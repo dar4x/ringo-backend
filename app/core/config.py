@@ -1,6 +1,6 @@
 # External packages
 import os
-from faster_whisper import WhisperModel
+# from faster_whisper import WhisperModel
 
 # API lrclib data base
 LRCLIB_API = "https://lrclib.net/api/"
@@ -9,4 +9,4 @@ LRCLIB_API = "https://lrclib.net/api/"
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 
 # Model Faster whisper
-model = WhisperModel("medium", device="cpu", compute_type="float32")
+# model = WhisperModel("medium", device="cpu", compute_type="float32")
