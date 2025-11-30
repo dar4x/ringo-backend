@@ -1,8 +1,10 @@
+from typing import List, Optional
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
 from app.core.database.database import Base
 
-
+    
 class Song(Base): 
     __tablename__ = "songs"
 
@@ -20,9 +22,25 @@ class SongTranslation(Base):
     song_id = Column(Integer, ForeignKey("songs.id"), nullable=False)
     source_language = Column(String(10), nullable=False)
     target_language = Column(String(10), nullable=False)
-    translation = Column(Text, nullable=False)
+    translation = Column(Text, nullable=True)
     status = Column(String(20), default='unavailable')
 
     song = relationship("Song", back_populates="translations")
 
 Song.translations = relationship("SongTranslation", cascade="all, delete-orphan")
+
+
+class LineDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    original: str
+    translation: Optional[str] = None
+
+class SongDetailsDTO(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    trackName: str
+    artistName: str
+    plainLyrics: str  
+    lines: List[LineDTO]  
+    translationStatus: str = "unavailable"
