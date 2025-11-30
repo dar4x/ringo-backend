@@ -1,6 +1,6 @@
 from app.core.config import LRCLIB_API
 from app.core.http_client import async_client
-from app.core.models.songs import Song, SongTranslation
+from app.core.models.songs import LineDTO, Song, SongTranslation
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.models.dto_song_details import SongDetailsDTO
@@ -35,14 +35,29 @@ async def song_id(id: int, db: Session) -> Optional[SongDetailsDTO]:
             SongTranslation.song_id == id, 
             SongTranslation.target_language == "ru"
         ).first()
+
+        original_lines = [line.strip() for line in song.lyrics.splitlines() if line.strip()]
+        translated_lines = []
+        
+        if translation and translation.translation:
+            translated_lines = [line.strip() for line in translation.translation.splitlines() 
+                              if line.strip()]
+            
+        lines = []
+        for i, orig in enumerate(original_lines):
+            trans = translated_lines[i] if i < len(translated_lines) else None
+            lines.append(LineDTO(
+                original=f"[translate:{orig}]",
+                translation=trans
+            ))
         
         return SongDetailsDTO(
             id=song.id,
             trackName=song.track_name,
             artistName=song.artist_name,
-            plainLyrics=song.lyrics,
-            translation=translation.translation if translation else None,
-            translationStatus=translation.status if translation else None
+            plainLyrics=song.lyrics, 
+            lines=lines,              
+            translationStatus=translation.status if translation else "unavailable"
         )
     
     try:

@@ -39,3 +39,12 @@ def test_db(db: Session = Depends(get_db)):
         }
     except Exception as e:
         return {"status": "DB error", "error": str(e)}
+
+
+@app.get("/test-perplexity")
+async def test_perplexity():
+    from app.core.config import PERPLEXITY_API_KEY
+    return {
+        "key_exists": bool(PERPLEXITY_API_KEY),
+        "key_preview": PERPLEXITY_API_KEY[:20] + "..." if PERPLEXITY_API_KEY else None
+    }
