@@ -4,32 +4,58 @@ from app.core.models.songs import LineDTO, Song, SongDetailsDTO, SongTranslation
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.models.dto_song_search import SongSearchDTO
+from app.services.encoding_utils import fix_mojibake
 from app.services.perplexity_service import translate_song_lyrics
 
 
-
-async def search_song(q: str = None, track_name: str = None, artist_name: str = None, album_name: str = None) -> list[SongSearchDTO]:
-
+async def search_song(
+    q: str = None,
+    track_name: str = None,
+    artist_name: str = None,
+    album_name: str = None,
+) -> list[SongSearchDTO]:
     params = {
         "q": q,
         "track_name": track_name,
         "artist_name": artist_name,
-        "album_name": album_name
+        "album_name": album_name,
     }
 
     resp = await async_client.get(LRCLIB_API + "search", params=params)
     resp.raise_for_status()
-
     data = resp.json()
 
     if not isinstance(data, list):
         return []
 
-    return [SongSearchDTO(**item) for item in data]
+    print(f"LRCLIB search returned {len(data)} items")
 
+    results: list[SongSearchDTO] = []
 
-from typing import Optional
-from sqlalchemy.orm import Session
+    for idx, raw in enumerate(data):
+        raw_track = raw.get("trackName") or ""
+        raw_artist = raw.get("artistName") or ""
+        raw_album  = raw.get("albumName") or ""
+
+        # если вообще пусто по всем трём — пропускаем
+        if not (raw_track or raw_artist or raw_album):
+            print(f"⚠️ Skipping item {idx}: empty track/artist/album")
+            continue
+
+        track_fixed  = fix_mojibake(raw_track)
+        artist_fixed = fix_mojibake(raw_artist)
+        album_fixed  = fix_mojibake(raw_album)
+
+        dto = SongSearchDTO(
+            id=raw.get("id"),
+            trackName=track_fixed,
+            artistName=artist_fixed,
+            albumName=album_fixed,
+        )
+        results.append(dto)
+
+    print(f"Returning {len(results)} valid items")
+    return results
 
 
 
@@ -46,13 +72,17 @@ async def song_id(id: int, db: Session) -> Optional[SongDetailsDTO]:
             data = resp.json()
             if not isinstance(data, dict):
                 return None
+            
+            track_name = fix_mojibake(data["trackName"])
+            artist_name = fix_mojibake(data["artistName"])
+            lyrics = fix_mojibake(data["plainLyrics"])
 
             song = Song(
                 id=data["id"],
-                track_name=data["trackName"],
-                artist_name=data["artistName"],
-                lyrics=data["plainLyrics"],
-                language="en",  # или de/ja — по ситуации
+                track_name=track_name,
+                artist_name=artist_name,
+                lyrics=lyrics,
+                language="ja",  # или de/ja — по ситуации
             )
             db.add(song)
             db.commit()
@@ -109,9 +139,9 @@ async def song_id(id: int, db: Session) -> Optional[SongDetailsDTO]:
 
     return SongDetailsDTO(
         id=song.id,
-        trackName=song.track_name,
-        artistName=song.artist_name,
-        plainLyrics=song.lyrics,
+        trackName=fix_mojibake(song.track_name),
+        artistName=fix_mojibake(song.artist_name),
+        plainLyrics=fix_mojibake(song.lyrics),
         lines=lines,
         translationStatus=translation.status,
     )
