@@ -10,14 +10,13 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./song_learner.db")
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}  # SQLite requirement
+    connect_args={"check_same_thread": False}  # обязательный аргумент для SQLite
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
-    """FastAPI dependency для сессии БД"""
     db = SessionLocal()
     try:
         yield db
