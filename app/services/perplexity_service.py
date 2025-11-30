@@ -3,15 +3,15 @@ from typing import Optional
 from app.core.config import PERPLEXITY_API_KEY
 from app.core.http_client import async_client
 
-# COPYRIGHT_MARKERS = [
-#     "не могу предоставить полный перевод текста этой песни",
-#     "это было бы воспроизведением защищённого авторским правом материала",
-#     "i cannot provide a full translation of this song",
-# ]
+COPYRIGHT_MARKERS = [
+    "не могу предоставить полный перевод текста этой песни",
+    "это было бы воспроизведением защищённого авторским правом материала",
+    "i cannot provide a full translation of this song",
+]
 
-# def is_copyright_refusal(text: str) -> bool:
-#     lower = text.lower()
-#     return any(marker in lower for marker in COPYRIGHT_MARKERS)
+def is_copyright_refusal(text: str) -> bool:
+    lower = text.lower()
+    return any(marker in lower for marker in COPYRIGHT_MARKERS)
 
 
 async def translate_song_lyrics(lyrics: str, target_lang: str = "ru") -> Optional[str]:
@@ -59,9 +59,9 @@ async def translate_song_lyrics(lyrics: str, target_lang: str = "ru") -> Optiona
         content = data["choices"][0]["message"]["content"].strip()
         print(f"✅ Translation: {content[:100]}...")
         
-        # if is_copyright_refusal(content):
-        #     print("⚠️ Detected copyright refusal from Perplexity")
-        #     return None
+        if is_copyright_refusal(content):
+            print("⚠️ Detected copyright refusal from Perplexity")
+            return None
         
         return content
     
