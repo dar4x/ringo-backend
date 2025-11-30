@@ -5,6 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 # Internal packages
+from app.api import lesson_routes, song_routes, word_routes
 from app.api.song_routes import router as song_router
 from app.core.database.database import DATABASE_URL, engine, SessionLocal, get_db, Base
 from app.core.models.songs import Song, SongTranslation
@@ -23,6 +24,9 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 app.include_router(song_router)
+app.include_router(song_routes.router)
+app.include_router(lesson_routes.router)
+app.include_router(word_routes.router)
 
 
 @app.get("/")
